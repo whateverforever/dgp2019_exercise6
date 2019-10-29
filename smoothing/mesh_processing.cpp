@@ -42,7 +42,29 @@ void MeshProcessing::uniform_smooth(const unsigned int iterations)
         // ------------- IMPLEMENT HERE ---------
         // For each non-boundary vertex, update its position according to the uniform Laplacian operator
         // ------------- IMPLEMENT HERE ---------
+        for (auto v_i : mesh_.vertices()) {
+            vv_c = Mesh::Vertex_around_vertex_circulator(&mesh_, v_i);
+            vv_end = vv_c;
+
+            Point laplacian_elem(0.0, 0.0, 0.0);
+            Point p_i = mesh_.position(v_i);
+
+            float sum_weights = 0;
+            float edge_weight = 1;
+            float lambda_dt = 0.25;
+
+            do {
+                Point p_j = mesh_.position(*vv_c);
+
+                laplacian_elem += edge_weight * (p_j - p_i);
+                sum_weights += edge_weight;
+            } while (++vv_c != vv_end);
+
+            laplacian_elem /= sum_weights;
+
+            v_new_pos[v_i] = mesh_.position(v_i) + lambda_dt * laplacian_elem;
         }
+    }
 }
 
 // ======================================================================
