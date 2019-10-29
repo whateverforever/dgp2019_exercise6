@@ -164,6 +164,41 @@ void MeshProcessing::implicit_smoothing(const double timestep)
     //      - Note that the cotan and inverse area weights used in D & M are already computed for you
     //        (provided in properties above).
     // ------------- IMPLEMENT HERE ---------
+    calc_edges_weights();
+    for (auto v_i : mesh_.vertices()) {
+        if (mesh_.is_boundary(v_i)) {
+            //TODO: KEEP OLD POSITION
+            continue;
+        }
+
+        Mesh::Halfedge_around_vertex_circulator vh_c, vh_end;
+
+        vh_c = mesh_.halfedges(v_i);
+        vh_end = vh_c;
+
+        Point p_i = mesh_.position(v_i);
+
+        float sum_weights = 0;
+        float lambda_dt = 0.5;
+
+        do {
+            Mesh::Edge edge_outward = mesh_.edge(*vh_c);
+            Mesh::Vertex neighbour = mesh_.to_vertex(*vh_c);
+
+            float edge_weight = cotan[edge_outward];
+
+            Eigen::Triplet<double> off_diag = { v_i.idx(), neighbour.idx(), -lambda_dt * edge_weight };
+            triplets.push_back(off_diag);
+
+            sum_weights += edge_weight;
+        } while (++vh_c != vh_end);
+
+        float Dinv = 1 / area_inv[v_i];
+        float M_diag = -sum_weights;
+
+        Eigen::Triplet<double> diagonal = { v_i.idx(), v_i.idx(), Dinv - lambda_dt * M_diag };
+        triplets.push_back(diagonal);
+    }
 
     // build sparse matrix from triplets
     A.setFromTriplets(triplets.begin(), triplets.end());
