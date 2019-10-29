@@ -92,6 +92,18 @@ void MeshProcessing::smooth(const unsigned int iterations)
         // 2) for each non-boundary vertex, update its position using the normalized cotan Laplacian operator
         //    (Hint: use the precomputed edge weights in the edge property "e:weight")
         // ------------- IMPLEMENT HERE ---------
+        calc_edges_weights();
+        for (auto v_i : mesh_.vertices()) {
+            vh_c = mesh_.halfedges(v_i);
+            vh_end = vh_c;
+
+            do {
+            } while (++vh_c != vh_end);
+        }
+
+        for (auto v : mesh_.vertices()) {
+            mesh_.position(v) = v_new_pos[v];
+        }
     }
 }
 
