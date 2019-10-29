@@ -100,6 +100,7 @@ void MeshProcessing::smooth(const unsigned int iterations)
             Point p_i = mesh_.position(v_i);
             laplace = Point(0.0, 0.0, 0.0);
             float sum_weights = 0;
+            float lambda_dt = 0.5;
 
             do {
                 Mesh::Edge edge_outward = mesh_.edge(*vh_c);
@@ -111,6 +112,8 @@ void MeshProcessing::smooth(const unsigned int iterations)
             } while (++vh_c != vh_end);
 
             laplace /= sum_weights;
+
+            v_new_pos[v_i] = mesh_.position(v_i) + lambda_dt * laplace;
         }
 
         for (auto v : mesh_.vertices()) {
