@@ -167,7 +167,8 @@ void MeshProcessing::implicit_smoothing(const double timestep)
     calc_edges_weights();
     for (auto v_i : mesh_.vertices()) {
         if (mesh_.is_boundary(v_i)) {
-            //TODO: KEEP OLD POSITION
+            Eigen::Triplet<double> identity = { v_i.idx(), v_i.idx(), 1 / area_inv[v_i] };
+            triplets.push_back(identity);
             continue;
         }
 
@@ -179,7 +180,6 @@ void MeshProcessing::implicit_smoothing(const double timestep)
         Point p_i = mesh_.position(v_i);
 
         float sum_weights = 0;
-        float lambda_dt = 0.5;
 
         do {
             Mesh::Edge edge_outward = mesh_.edge(*vh_c);
@@ -187,7 +187,7 @@ void MeshProcessing::implicit_smoothing(const double timestep)
 
             float edge_weight = cotan[edge_outward];
 
-            Eigen::Triplet<double> off_diag = { v_i.idx(), neighbour.idx(), -lambda_dt * edge_weight };
+            Eigen::Triplet<double> off_diag = { v_i.idx(), neighbour.idx(), -timestep * edge_weight };
             triplets.push_back(off_diag);
 
             sum_weights += edge_weight;
@@ -196,8 +196,11 @@ void MeshProcessing::implicit_smoothing(const double timestep)
         float Dinv = 1 / area_inv[v_i];
         float M_diag = -sum_weights;
 
-        Eigen::Triplet<double> diagonal = { v_i.idx(), v_i.idx(), Dinv - lambda_dt * M_diag };
+        Eigen::Triplet<double> diagonal = { v_i.idx(), v_i.idx(), Dinv - timestep * M_diag };
         triplets.push_back(diagonal);
+
+        Point b_i = 1 / area_inv[v_i] * mesh_.position(v_i);
+        B.block<1, 3>(v_i.idx(), 0) = Eigen::Vector3d{ b_i[0], b_i[1], b_i[2] };
     }
 
     // build sparse matrix from triplets
