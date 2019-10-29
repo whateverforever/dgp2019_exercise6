@@ -97,8 +97,20 @@ void MeshProcessing::smooth(const unsigned int iterations)
             vh_c = mesh_.halfedges(v_i);
             vh_end = vh_c;
 
+            Point p_i = mesh_.position(v_i);
+            laplace = Point(0.0, 0.0, 0.0);
+            float sum_weights = 0;
+
             do {
+                Mesh::Edge edge_outward = mesh_.edge(*vh_c);
+                Point p_j = mesh_.position(mesh_.to_vertex(*vh_c));
+
+                float edge_weight = e_weight[edge_outward];
+                laplace += edge_weight * (p_j - p_i);
+                sum_weights += edge_weight;
             } while (++vh_c != vh_end);
+
+            laplace /= sum_weights;
         }
 
         for (auto v : mesh_.vertices()) {
