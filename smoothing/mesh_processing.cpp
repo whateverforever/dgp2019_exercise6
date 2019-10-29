@@ -231,6 +231,21 @@ void MeshProcessing::uniform_laplacian_enhance_feature(const unsigned int iterat
     // 2) update the vertex positions according to the difference between the original and the smoothed mesh,
     //    using enhancement_coef as the value of alpha in the feature enhancement formula
     // ------------- IMPLEMENT HERE ---------
+
+    auto points_in = mesh_.vertex_property<Point>("v:in");
+    auto points_out = mesh_.vertex_property<Point>("v:out");
+
+    for (auto v : mesh_.vertices()) {
+        points_in[v] = mesh_.position(v);
+    }
+    uniform_smooth(iterations);
+    for (auto v : mesh_.vertices()) {
+        points_out[v] = mesh_.position(v);
+    }
+
+    for (auto v : mesh_.vertices()) {
+        mesh_.position(v) = points_out[v] + coefficient * (points_in[v] - points_out[v]);
+    }
 }
 
 // ======================================================================
