@@ -51,7 +51,7 @@ void MeshProcessing::uniform_smooth(const unsigned int iterations)
 
             float sum_weights = 0;
             float edge_weight = 1;
-            float lambda_dt = 0.25;
+            float lambda_dt = 0.5;
 
             do {
                 Point p_j = mesh_.position(*vv_c);
@@ -63,6 +63,10 @@ void MeshProcessing::uniform_smooth(const unsigned int iterations)
             laplacian_elem /= sum_weights;
 
             v_new_pos[v_i] = mesh_.position(v_i) + lambda_dt * laplacian_elem;
+        }
+
+        for (auto v : mesh_.vertices()) {
+            mesh_.position(v) = v_new_pos[v];
         }
     }
 }
