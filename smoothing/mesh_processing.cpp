@@ -43,6 +43,11 @@ void MeshProcessing::uniform_smooth(const unsigned int iterations)
         // For each non-boundary vertex, update its position according to the uniform Laplacian operator
         // ------------- IMPLEMENT HERE ---------
         for (auto v_i : mesh_.vertices()) {
+            if (mesh_.is_boundary(v_i)) {
+                v_new_pos[v_i] = mesh_.position(v_i);
+                continue;
+            }
+
             vv_c = Mesh::Vertex_around_vertex_circulator(&mesh_, v_i);
             vv_end = vv_c;
 
@@ -94,6 +99,11 @@ void MeshProcessing::smooth(const unsigned int iterations)
         // ------------- IMPLEMENT HERE ---------
         calc_edges_weights();
         for (auto v_i : mesh_.vertices()) {
+            if (mesh_.is_boundary(v_i)) {
+                v_new_pos[v_i] = mesh_.position(v_i);
+                continue;
+            }
+
             vh_c = mesh_.halfedges(v_i);
             vh_end = vh_c;
 
