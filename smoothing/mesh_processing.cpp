@@ -166,18 +166,18 @@ void MeshProcessing::implicit_smoothing(const double timestep)
     // ------------- IMPLEMENT HERE ---------
     calc_edges_weights();
     for (auto v_i : mesh_.vertices()) {
-        if (mesh_.is_boundary(v_i)) {
-            Eigen::Triplet<double> identity = { v_i.idx(), v_i.idx(), 1 / area_inv[v_i] };
-            triplets.push_back(identity);
-            continue;
-        }
+        Point b_i = 1 / area_inv[v_i] * mesh_.position(v_i);
+        B.block<1, 3>(v_i.idx(), 0) = Eigen::Vector3d{ b_i[0], b_i[1], b_i[2] };
+
+        // if (mesh_.is_boundary(v_i)) {
+        //     Eigen::Triplet<double> identity = { v_i.idx(), v_i.idx(), 1 / area_inv[v_i] };
+        //     triplets.push_back(identity);
+        //     continue;
+        // }
 
         Mesh::Halfedge_around_vertex_circulator vh_c, vh_end;
-
         vh_c = mesh_.halfedges(v_i);
         vh_end = vh_c;
-
-        Point p_i = mesh_.position(v_i);
 
         float sum_weights = 0;
 
@@ -198,9 +198,6 @@ void MeshProcessing::implicit_smoothing(const double timestep)
 
         Eigen::Triplet<double> diagonal = { v_i.idx(), v_i.idx(), Dinv - timestep * M_diag };
         triplets.push_back(diagonal);
-
-        Point b_i = 1 / area_inv[v_i] * mesh_.position(v_i);
-        B.block<1, 3>(v_i.idx(), 0) = Eigen::Vector3d{ b_i[0], b_i[1], b_i[2] };
     }
 
     // build sparse matrix from triplets
